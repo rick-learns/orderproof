@@ -1,12 +1,15 @@
 # Emulator-free checks on every push and pull request: unit, backend integration, oracle and
 # verifier tests, Android lint, defect-isolation check, and all APKs. The emulator release gate
 # (scripts/verify.sh) is a local-only stage; see docs/ci.md for why and how to run it.
+# Documentation-only changes build nothing, so they skip CI.
 name: ci
 
 on:
   push:
     branches: [main]
+    paths-ignore: ['docs/**', '**/*.md']
   pull_request:
+    paths-ignore: ['docs/**', '**/*.md']
   workflow_dispatch:
 
 permissions:

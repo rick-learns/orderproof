@@ -2,7 +2,9 @@
 
 ## In CI (`.github/workflows/ci.yml`, runs `scripts/ci.sh`)
 
-Every push to `main` and every pull request runs everything that needs no emulator:
+Every push to `main` and every pull request runs everything that needs no emulator. Changes that
+touch only `docs/**` or Markdown files skip CI; a newer push to the same branch cancels the run in
+progress:
 
 | Stage | Command | What it proves |
 |---|---|---|
