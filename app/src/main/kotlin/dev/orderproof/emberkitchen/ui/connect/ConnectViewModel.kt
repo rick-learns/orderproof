@@ -52,6 +52,15 @@ class ConnectViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun onLocalNetworkDenied() = mutable.update {
+        it.copy(
+            checking = false,
+            reachable = false,
+            status = "Ember Kitchen needs local network access to reach the test backend. " +
+                "Allow it when asked, or in Settings › Apps › Ember Kitchen › Permissions.",
+        )
+    }
+
     fun save(onSaved: () -> Unit) {
         viewModelScope.launch {
             container.connection.save(state.value.url)

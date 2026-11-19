@@ -36,6 +36,7 @@ import dev.orderproof.emberkitchen.ui.components.EmberScaffold
 fun ConnectScreen(container: AppContainer, onConnected: () -> Unit) {
     val vm: ConnectViewModel = viewModel { ConnectViewModel(container) }
     val state by vm.state.collectAsStateWithLifecycle()
+    val withLocalNetwork = rememberLocalNetworkGate(onDenied = vm::onLocalNetworkDenied)
 
     EmberScaffold(title = "Connect to Ember Kitchen") { padding ->
         Column(
@@ -60,7 +61,7 @@ fun ConnectScreen(container: AppContainer, onConnected: () -> Unit) {
             )
             TextButton(onClick = { vm.onUrlChange(ConnectionSettings.EMULATOR_HINT) }) { Text("Use emulator address") }
             OutlinedButton(
-                onClick = vm::test,
+                onClick = { withLocalNetwork(vm::test) },
                 enabled = state.valid && !state.checking,
                 modifier = Modifier.fillMaxWidth().testTag(TestTags.CONNECT_TEST),
             ) { Text(if (state.checking) "Checking…" else "Test connection") }
@@ -72,7 +73,7 @@ fun ConnectScreen(container: AppContainer, onConnected: () -> Unit) {
                 )
             }
             Button(
-                onClick = { vm.save(onConnected) },
+                onClick = { withLocalNetwork { vm.save(onConnected) } },
                 enabled = state.valid,
                 modifier = Modifier.fillMaxWidth().testTag(TestTags.CONNECT_SAVE),
             ) { Text("Save and continue") }
