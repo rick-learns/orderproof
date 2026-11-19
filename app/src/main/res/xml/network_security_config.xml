@@ -4,6 +4,6 @@
   emulator host or a LAN address the tester types in. Cleartext is allowed for that reason only;
   nothing real is transmitted (simulated payments, fictional orders).
 -->
-<network-security-config>
-    <base-config cleartextTrafficPermitted="true" />
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+    <base-config cleartextTrafficPermitted="true" tools:ignore="InsecureBaseConfiguration" />
 </network-security-config>

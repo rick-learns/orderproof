@@ -56,6 +56,11 @@ android {
         resValues = true
     }
 
+    lint {
+        warningsAsErrors = true
+        abortOnError = true
+    }
+
     testOptions {
         animationsDisabled = true
         unitTests.isReturnDefaultValues = true

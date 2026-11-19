@@ -107,9 +107,9 @@ private fun OptionGroupSection(group: OptionGroupDto, state: ItemUiState, vm: It
 }
 
 @Composable
-private fun OptionRow(option: OptionDto, interaction: Modifier, control: @Composable () -> Unit) {
+private fun OptionRow(option: OptionDto, modifier: Modifier, control: @Composable () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).then(interaction).testTag(TestTags.option(option.id)),
+        modifier = modifier.fillMaxWidth().heightIn(min = 48.dp).testTag(TestTags.option(option.id)),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
