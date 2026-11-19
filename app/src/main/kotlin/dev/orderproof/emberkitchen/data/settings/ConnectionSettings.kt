@@ -28,8 +28,9 @@ class ConnectionSettings(private val dataStore: DataStore<Preferences>) {
         const val EMULATOR_HINT = "http://10.0.2.2:8787"
 
         fun normalize(raw: String): String? {
-            val trimmed = raw.trim().trimEnd('/')
-            val withScheme = if ("://" in trimmed) trimmed else "http://$trimmed"
+            val trimmed = raw.trim()
+            // Add the scheme before stripping slashes, so a bare "http://" is not read as a host.
+            val withScheme = (if ("://" in trimmed) trimmed else "http://$trimmed").trimEnd('/')
             val parsed = runCatching { java.net.URI(withScheme) }.getOrNull() ?: return null
             if (parsed.scheme !in setOf("http", "https") || parsed.host.isNullOrBlank()) return null
             return withScheme
