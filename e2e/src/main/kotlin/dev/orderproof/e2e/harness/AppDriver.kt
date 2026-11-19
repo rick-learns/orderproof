@@ -2,6 +2,7 @@ package dev.orderproof.e2e.harness
 
 import android.content.Intent
 import android.os.Build
+import android.os.SystemClock
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
@@ -15,16 +16,40 @@ import java.util.regex.Pattern
  * Drives the candidate app from outside its process through accessibility, using the Compose
  * test tags it exposes as resource ids. Every wait is a condition with a deadline, never a sleep.
  */
-class AppDriver(private val pkg: String, private val waitMillis: Long) {
+class AppDriver(
+    private val pkg: String,
+    private val waitMillis: Long,
+    private val note: (String) -> Unit = {},
+) {
     val device: UiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-    /** Starts the app, or brings its existing task to the front exactly as the launcher would. */
+    /**
+     * Starts the app, or brings its existing task to the front exactly as the launcher would.
+     *
+     * Right after a force-stop or `pm clear`, the system's own task cleanup can kill the freshly
+     * started process before it draws (seen on API 34 as `am_kill ... remove task`), which leaves
+     * an empty task behind. When there is neither a window nor a process, this taps the icon again,
+     * as a customer would, at most [MAX_RELAUNCHES] times, and each relaunch is a step in the
+     * evidence. An app that dies at startup still fails here once the relaunches are spent.
+     */
     fun launch() {
         val context = InstrumentationRegistry.getInstrumentation().context
         val intent = context.packageManager.getLaunchIntentForPackage(pkg)
+            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             ?: throw InfrastructureError("Package $pkg is not installed")
-        context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        if (!device.wait(Until.hasObject(By.pkg(pkg).depth(0)), waitMillis)) throw AssertionError("$pkg did not come to the foreground")
+        val deadline = SystemClock.uptimeMillis() + waitMillis
+        var relaunches = 0
+        context.startActivity(intent)
+        while (true) {
+            val remaining = deadline - SystemClock.uptimeMillis()
+            if (remaining <= 0) throw AssertionError("$pkg did not come to the foreground" + if (relaunches > 0) " (relaunched $relaunches times)" else "")
+            if (device.wait(Until.hasObject(By.pkg(pkg).depth(0)), minOf(LAUNCH_SLICE_MILLIS, remaining))) return
+            if (relaunches < MAX_RELAUNCHES && Shell.run("pidof $pkg").isBlank()) {
+                relaunches++
+                note("launch: no $pkg window or process after ${LAUNCH_SLICE_MILLIS} ms; starting it again as the launcher would ($relaunches/$MAX_RELAUNCHES)")
+                context.startActivity(intent)
+            }
+        }
     }
 
     /** Real process death: the kernel reclaims the process, nothing in the app gets a callback. */
@@ -137,6 +162,8 @@ class AppDriver(private val pkg: String, private val waitMillis: Long) {
     private fun res(tag: String): BySelector = By.res(tag)
 
     private companion object {
+        const val LAUNCH_SLICE_MILLIS = 3_000L
+        const val MAX_RELAUNCHES = 2
         const val MAX_SWIPES = 25
         const val STALE_RETRIES = 5
         /** About 5 ms per step: a deliberate drag, not a fling that could skip past the target. */

@@ -11,7 +11,7 @@ import org.junit.runner.Description
 class ScenarioRule : TestWatcher() {
     val args: E2eArgs = E2eArgs.fromInstrumentation()
     val control = ControlClient(args.controlUrl, args.controlToken)
-    val app = AppDriver(args.targetPackage, args.waitMillis)
+    val app = AppDriver(args.targetPackage, args.waitMillis) { evidence.step(it) }
     lateinit var evidence: Evidence
         private set
 
