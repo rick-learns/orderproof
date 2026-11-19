@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Ember Kitchen backend is a local, fictional test service reached over plain HTTP on the
+  emulator host or a LAN address the tester types in. Cleartext is allowed for that reason only;
+  nothing real is transmitted (simulated payments, fictional orders).
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
