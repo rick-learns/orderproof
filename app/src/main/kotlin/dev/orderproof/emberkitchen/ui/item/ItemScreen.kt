@@ -64,7 +64,7 @@ fun ItemScreen(container: AppContainer, itemId: String, onDone: () -> Unit) {
             }
             item == null -> LoadingState("Loading…", Modifier.padding(padding))
             else -> Column(
-                Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
+                Modifier.fillMaxSize().padding(padding).testTag(TestTags.ITEM_DETAILS).verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(item.description, style = MaterialTheme.typography.bodyLarge)

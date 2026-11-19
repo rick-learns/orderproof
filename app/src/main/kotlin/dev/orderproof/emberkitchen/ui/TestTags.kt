@@ -17,6 +17,7 @@ object TestTags {
     const val ACTIVE_ORDER_BANNER = "active_order_banner"
     fun menuItem(id: String) = "menu_item_$id"
 
+    const val ITEM_DETAILS = "item_details"
     fun option(id: String) = "option_$id"
     const val QUANTITY_INCREASE = "quantity_increase"
     const val QUANTITY_DECREASE = "quantity_decrease"
