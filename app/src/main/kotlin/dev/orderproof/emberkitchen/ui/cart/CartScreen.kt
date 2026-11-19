@@ -1,5 +1,10 @@
 package dev.orderproof.emberkitchen.ui.cart
 
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -121,15 +126,23 @@ private fun CartLineCard(line: CartLine, soldOut: Boolean, onQuantity: (Int) -> 
 @Composable
 private fun CouponEntry(applied: String?, quote: QuoteResponse?, onApply: (String) -> Unit) {
     var code by rememberSaveable(applied) { mutableStateOf(applied.orEmpty()) }
+    val focus = LocalFocusManager.current
+    val apply = {
+        // Dismiss the keyboard so the updated total and the review button are visible again.
+        focus.clearFocus()
+        onApply(code)
+    }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
             value = code,
             onValueChange = { code = it },
             label = { Text("Coupon code") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { apply() }),
             modifier = Modifier.fillMaxWidth().testTag(TestTags.COUPON_FIELD),
         )
-        OutlinedButton(onClick = { onApply(code) }, modifier = Modifier.testTag(TestTags.COUPON_APPLY)) {
+        OutlinedButton(onClick = apply, modifier = Modifier.testTag(TestTags.COUPON_APPLY)) {
             Text(if (code.isBlank() && applied != null) "Remove coupon" else "Apply coupon")
         }
         quote?.coupon?.let { coupon ->
