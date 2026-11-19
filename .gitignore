@@ -1,0 +1,17 @@
+.gradle/
+.kotlin/
+build/
+local.properties
+*.iml
+.idea/
+.DS_Store
+captures/
+
+# Local runtime state
+/runs/
+/dist/
+/backend/data/
+*.db
+*.db-wal
+*.db-shm
+control-token*
