@@ -40,7 +40,7 @@ fun ConnectScreen(container: AppContainer, onConnected: () -> Unit) {
 
     EmberScaffold(title = "Connect to Ember Kitchen") { padding ->
         Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(20.dp),
+            Modifier.fillMaxSize().padding(padding).testTag(TestTags.CONNECT_FORM).verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Text(

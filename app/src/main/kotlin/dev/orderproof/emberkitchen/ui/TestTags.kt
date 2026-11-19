@@ -8,6 +8,7 @@ object TestTags {
     const val CONNECT_TEST = "connect_test"
     const val CONNECT_SAVE = "connect_save"
     const val CONNECT_STATUS = "connect_status"
+    const val CONNECT_FORM = "connect_form"
 
     const val MENU_LIST = "menu_list"
     const val MENU_ERROR = "menu_error"
