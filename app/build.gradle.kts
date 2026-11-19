@@ -97,6 +97,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.truth)
     androidTestImplementation(libs.androidx.test.uiautomator)
     // Compose ui-test pulls an older Espresso that breaks on API 37 (InputManager.getInstance).
     androidTestImplementation(libs.androidx.test.espresso.core)
