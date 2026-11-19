@@ -5,7 +5,6 @@ import android.os.Build
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
-import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -69,11 +68,24 @@ class AppDriver(private val pkg: String, private val waitMillis: Long) {
         enabled.click()
     }
 
+    /**
+     * Swipes [container] upward until [tag] is on screen. The end of the list is detected by its
+     * content no longer changing after a swipe, rather than by scroll accessibility events, which
+     * Compose lists do not always report the way UiAutomator's own scrollUntil expects.
+     */
     fun scrollTo(tag: String, container: String): UiObject2 {
-        device.findObject(res(tag))?.let { return it }
-        val scrollable = await(container)
-        return scrollable.scrollUntil(Direction.DOWN, Until.findObject(res(tag)))
-            ?: throw AssertionError("'$tag' not reachable by scrolling '$container'")
+        repeat(MAX_SWIPES) {
+            device.findObject(res(tag))?.let { return it }
+            val list = await(container)
+            val before = collect(list)
+            val b = list.visibleBounds
+            device.swipe(b.centerX(), b.bottom - b.height() / 4, b.centerX(), b.top + b.height() / 4, SWIPE_STEPS)
+            device.waitForIdle()
+            if (collect(await(container)) == before) {
+                return device.findObject(res(tag)) ?: throw AssertionError("'$tag' not found; '$container' cannot scroll further")
+            }
+        }
+        throw AssertionError("'$tag' not reached after $MAX_SWIPES swipes of '$container'")
     }
 
     /** Clicks [tag] repeatedly with no waits in between, as fast as touch events can be injected. */
@@ -111,4 +123,10 @@ class AppDriver(private val pkg: String, private val waitMillis: Long) {
         (listOfNotNull(node.text, node.contentDescription) + node.children.map(::collect)).filter { it.isNotBlank() }.joinToString(" ")
 
     private fun res(tag: String): BySelector = By.res(tag)
+
+    private companion object {
+        const val MAX_SWIPES = 25
+        /** About 5 ms per step: a deliberate drag, not a fling that could skip past the target. */
+        const val SWIPE_STEPS = 40
+    }
 }
