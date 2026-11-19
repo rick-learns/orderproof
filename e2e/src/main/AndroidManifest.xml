@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Reaches the control API through `adb reverse` on the device's loopback. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Lets the runner see whichever candidate package it was asked to drive. -->
+    <queries>
+        <package android:name="dev.orderproof.emberkitchen" />
+        <package android:name="dev.orderproof.emberkitchen.faulty" />
+    </queries>
+    <application android:usesCleartextTraffic="true" />
+</manifest>

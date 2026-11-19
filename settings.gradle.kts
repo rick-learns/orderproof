@@ -25,3 +25,5 @@ include(":backend")
 include(":oracle")
 include(":verifier")
 include(":app")
+// Out-of-process UI Automator release scenarios: one APK drives either candidate.
+include(":e2e")
