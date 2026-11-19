@@ -37,6 +37,11 @@ class ScenarioRule : TestWatcher() {
 
     override fun failed(e: Throwable, description: Description) {
         runCatching { evidence.screenshot("failure") }
+        // What was on screen, as text: element ids, labels and bounds at the moment of failure.
+        runCatching {
+            val hierarchy = java.io.ByteArrayOutputStream().also { app.device.dumpWindowHierarchy(it) }
+            evidence.attach("failure-hierarchy.xml", hierarchy.toByteArray())
+        }
         val kind = when {
             e is InfrastructureError || e.cause is InfrastructureError -> "infrastructure"
             e is AssertionError -> "assertion"

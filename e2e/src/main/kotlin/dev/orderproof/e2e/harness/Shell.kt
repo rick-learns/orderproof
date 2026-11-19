@@ -12,4 +12,11 @@ object Shell {
         val pfd = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command)
         return ParcelFileDescriptor.AutoCloseInputStream(pfd).bufferedReader().use { it.readText() }
     }
+
+    /** Writes bytes to a shell-owned path (the test process itself cannot write there) by piping through `tee`. */
+    fun write(path: String, bytes: ByteArray) {
+        val (output, input) = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommandRw("tee $path")
+        ParcelFileDescriptor.AutoCloseOutputStream(input).use { it.write(bytes) }
+        ParcelFileDescriptor.AutoCloseInputStream(output).use { it.readBytes() }
+    }
 }

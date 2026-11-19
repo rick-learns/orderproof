@@ -24,6 +24,13 @@ class Evidence(private val root: String, private val scenario: String) {
         return file
     }
 
+    /** Stores an arbitrary evidence file (for example a view hierarchy dump) next to the screenshots. */
+    fun attach(name: String, bytes: ByteArray) {
+        val file = "$directory/$name"
+        Shell.write(file, bytes)
+        record("attachment", "label" to name, "file" to file)
+    }
+
     /** UI-level assertions: what the customer can see. Ledger judgment happens on the host. */
     fun check(name: String, passed: Boolean, detail: String) {
         record("assertion", "name" to name, "passed" to passed, "detail" to detail)
