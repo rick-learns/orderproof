@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -76,12 +77,11 @@ class AppDriver(private val pkg: String, private val waitMillis: Long) {
     fun scrollTo(tag: String, container: String): UiObject2 {
         repeat(MAX_SWIPES) {
             device.findObject(res(tag))?.let { return it }
-            val list = await(container)
-            val before = collect(list)
-            val b = list.visibleBounds
+            val before = text(container)
+            val b = await(container).visibleBounds
             device.swipe(b.centerX(), b.bottom - b.height() / 4, b.centerX(), b.top + b.height() / 4, SWIPE_STEPS)
             device.waitForIdle()
-            if (collect(await(container)) == before) {
+            if (text(container) == before) {
                 return device.findObject(res(tag)) ?: throw AssertionError("'$tag' not found; '$container' cannot scroll further")
             }
         }
@@ -103,8 +103,20 @@ class AppDriver(private val pkg: String, private val waitMillis: Long) {
         field.text = value
     }
 
-    /** All visible text of a node and its descendants (Compose may merge text into the parent). */
-    fun text(tag: String): String = collect(await(tag))
+    /**
+     * All visible text of a node and its descendants (Compose may merge text into the parent).
+     * A node replaced while it is being read goes stale; the read then starts over from a fresh lookup.
+     */
+    fun text(tag: String): String {
+        repeat(STALE_RETRIES) {
+            try {
+                return collect(await(tag))
+            } catch (_: StaleObjectException) {
+                device.waitForIdle()
+            }
+        }
+        throw AssertionError("'$tag' kept changing while being read ($STALE_RETRIES attempts)")
+    }
 
     fun isEnabled(tag: String): Boolean = await(tag).isEnabled
 
@@ -112,7 +124,7 @@ class AppDriver(private val pkg: String, private val waitMillis: Long) {
         val deadline = System.nanoTime() + waitMillis * 1_000_000
         var last = ""
         while (System.nanoTime() < deadline) {
-            device.findObject(res(tag))?.let { last = collect(it) }
+            if (device.hasObject(res(tag))) last = runCatching { text(tag) }.getOrDefault(last)
             if (fragment in last) return last
             device.waitForIdle(500)
         }
@@ -126,6 +138,7 @@ class AppDriver(private val pkg: String, private val waitMillis: Long) {
 
     private companion object {
         const val MAX_SWIPES = 25
+        const val STALE_RETRIES = 5
         /** About 5 ms per step: a deliberate drag, not a fling that could skip past the target. */
         const val SWIPE_STEPS = 40
     }
