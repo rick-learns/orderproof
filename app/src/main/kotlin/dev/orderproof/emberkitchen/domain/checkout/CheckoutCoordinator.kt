@@ -38,9 +38,16 @@ class CheckoutCoordinator(
 
     private val busy = AtomicBoolean(false)
 
-    /** Returns false when ignored because a submission is already in flight. */
-    fun placeOrder(lines: List<OrderLineRequest>, couponCode: String?, confirmedTotalMinor: Long): Boolean =
-        launchExclusive("placeOrder") {
+    /**
+     * Returns false when ignored: a submission is already in flight, or the previous one was
+     * just confirmed and the UI has not acknowledged it yet (a late tap must not reorder).
+     */
+    fun placeOrder(lines: List<OrderLineRequest>, couponCode: String?, confirmedTotalMinor: Long): Boolean {
+        if (mutableState.value is CheckoutState.Confirmed) {
+            log("placeOrder.ignored reason=already_confirmed")
+            return false
+        }
+        return launchExclusive("placeOrder") {
             val existing = attempts.load()
             if (existing != null && !existing.matches(lines, couponCode, confirmedTotalMinor)) {
                 // Never abandon an attempt that may have committed: settle it first.
@@ -63,6 +70,7 @@ class CheckoutCoordinator(
             }
             send(attempt)
         }
+    }
 
     fun retry(): Boolean = launchExclusive("retry") {
         val attempt = attempts.load()
