@@ -1,0 +1,56 @@
+# Emulator-free checks on every push and pull request: unit, backend integration, oracle and
+# verifier tests, Android lint, defect-isolation check, and all APKs. The emulator release gate
+# (scripts/verify.sh) is a local-only stage; see docs/ci.md for why and how to run it.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools platforms;android-37.0 build-tools;36.0.0 build-tools;37.0.0"
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Tests, lint and builds
+        run: scripts/ci.sh
+
+      - name: Labeled APKs
+        run: scripts/dist.sh
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: apks-${{ github.sha }}
+          path: dist/apk/
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: test-and-lint-reports-${{ github.sha }}
+          path: |
+            */build/reports/
+            */build/test-results/
+          if-no-files-found: warn
