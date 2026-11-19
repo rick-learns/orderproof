@@ -25,8 +25,9 @@ class Journey(private val rule: ScenarioRule) {
         evidence.step("add $quantity × $itemId $options")
         app.click("menu_item_$itemId", scrollIn = "menu_list")
         app.await("add_to_cart")
-        options.forEach { app.click("option_$it") }
-        repeat(quantity - 1) { app.click("quantity_increase") }
+        // On a small screen (or with the faulty build's banner) these can sit below the fold.
+        options.forEach { app.click("option_$it", scrollIn = "item_details") }
+        repeat(quantity - 1) { app.click("quantity_increase", scrollIn = "item_details") }
         app.click("add_to_cart")
         awaitMenu()
     }
